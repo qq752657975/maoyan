@@ -4,7 +4,7 @@
 
 
     <select id="getById" parameterType="int" resultType="com.ygb.entity.ActorVo">
-        select * from actor WHERE  actorId=#{actorId}1
+        select * from actor WHERE  actorId=#{actorId}111111
     </select>
     <!--管理员列表-->
     <select id="list" resultType="com.ygb.entity.ActorVo">
