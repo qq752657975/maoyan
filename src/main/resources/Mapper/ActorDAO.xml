@@ -10,7 +10,7 @@
     <select id="list" resultType="com.ygb.entity.ActorVo">
         select * from actor order by actorId desc
         <if test="pager !=null">
-          limit #{pager.startRow},#{pager.pageRow}
+          limit #{pager.startRow},#{pager.pageRow}dddddd
         </if>
     </select>
     <select id="count" resultType="int">
