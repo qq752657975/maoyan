@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.IMovieHallDao">
+
+
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.MovieHallVo">
+        select * from movieHall WHERE  hallId=#{hallId}
+    </select>
+    <!--影厅列表-->
+    <select id="list" resultType="com.ygb.entity.MovieHallVo">
+        select m.*,h.hallTypeName,a.agentName from movieHall m
+        INNER JOIN halltype h on m.hallTypeId=h.hallTypeId
+        INNER JOIN agentinfo a on m.agentId = a.agentId
+        <where>
+            <if test="movieHall.agentId>0">
+                and m.agentId=#{movieHall.agentId}
+            </if>
+        </where>
+
+        limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) from movieHall m
+        INNER JOIN halltype h on m.hallTypeId=h.hallTypeId
+        INNER JOIN agentinfo a on m.agentId = a.agentId
+        <where>
+            <if test="movieHall.agentId>0">
+                and m.agentId=#{movieHall.agentId}
+            </if>
+        </where>
+
+
+    </select>
+    <delete id="del" >
+        delete from movieHall where hallId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <insert id="add" parameterType="com.ygb.entity.MovieHallVo" useGeneratedKeys="true" keyColumn="hallId"  keyProperty="hallId">
+            INSERT INTO movieHall(hallName,agentId,seatNum,row,col,hallTypeId,state,remark)  values(#{hallName},#{agentId},#{seatNum},#{row},#{col},#{hallTypeId},#{state},#{remark})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.MovieHallVo">
+        UPDATE movieHall set hallName=#{hallName},agentId=#{agentId},row=#{row},col=#{col},hallTypeId=#{hallTypeId},state=#{state},remark=#{remark} where hallId=#{hallId}
+    </update>
+    <select id="agentList" parameterType="string" resultType="com.ygb.entity.MovieHallVo">
+        SELECT  * from agentinfo
+        <where>
+            <if test="agentId>0" >
+                and agentId=#{agentId}
+            </if>
+        </where>
+
+
+        order by agentId
+    </select>
+    <select id="hallTypeList" resultType="com.ygb.entity.MovieHallVo">
+        select * from halltype
+    </select>
+    <!--安排座位-->
+    <select id="seatCount"  parameterType="com.ygb.entity.MovieHallVo" resultType="int">
+        select count(*) from hallSeat where hallId=#{hallId}
+        <if test="state>0">
+            and state=#{state}
+        </if>
+    </select>
+    <select id="getSeatByHallId" parameterType="int" resultType="com.ygb.entity.HallSeatVo">
+        select * from hallSeat where hallId=#{hallId} order by hallId
+    </select>
+    <delete id="seatDel" parameterType="int">
+        delete from hallSeat where hallId=#{hallId}
+    </delete>
+    <insert id="seatAdd" parameterType="com.ygb.entity.HallSeatVo">
+        INSERT hallSeat(hallId,seatName,state) values(#{hallId},#{seatName},#{state})
+    </insert>
+    <update id="seatUpdate" parameterType="com.ygb.entity.HallSeatVo">
+        UPDATE hallSeat set state=#{state} where hallSeatId=#{hallSeatId}
+    </update>
+
+    <update id="updateHallSeat" parameterType="com.ygb.entity.MovieHallVo">
+        update movieHall set seatNum=#{seatNum} where hallId=#{hallId}
+    </update>
+</mapper>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ygb.Dao.IAgentDao" >
+    <select id="list" parameterType="com.ygb.entity.AgentInfo" resultType="com.ygb.entity.AgentInfo">
+        select a.*,p.provinceName,c.cityName from agentinfo a
+        left join province p on a.provinceId=p.provinceId
+        left join city c on a.cityId = c.cityid
+        <where>
+            <if test="agent.provinceId>0">
+                and a.provinceId = #{agent.provinceId}
+            </if>
+            <if test="agent.cityId>0">
+                and a.cityId = #{agent.cityId}
+            </if>
+            <if test="agent.agentName != null and agent.agentName != ''">
+                and a.agentName like concat('%',#{agent.agentName},'%')
+            </if>
+        </where>
+        order by a.provinceId,a.cityId limit #{pager.startRow},#{pager.pageRow}
+    </select>
+
+    <select id="count" parameterType="com.ygb.entity.AgentInfo" resultType="int">
+        select count(1) from agentinfo a
+        left join province p on a.provinceId = p.provinceId
+        left join city c on a.cityId = c.cityId
+        <where>
+            <if test="agent.agentName != null and agent.agentName != ''">
+                and a.agentName like concat('%',#{agent.agentName},'%')
+            </if>
+            <if test="agent.cityId > 0">
+                and a.cityId = #{agent.cityId}
+            </if>
+            <if test="agent.provinceId>0">
+                and a.provinceId = #{agent.provinceId}
+            </if>
+        </where>
+    </select>
+
+    <select id="province" resultType="com.ygb.entity.ProvinceVo">
+        select *from province order by seq
+    </select>
+
+    <select id="city" parameterType="int" resultType="com.ygb.entity.CityVo">
+        select * from  city where provinceId = #{pronvinceId} order by seq
+    </select>
+
+    <update id="update" parameterType="com.ygb.entity.AgentInfo">
+           UPDATE agentinfo set agentName=#{agentName},
+           carPark=#{carPark},glasses=#{glasses},
+           children=#{children},invalid=#{invalid},contact=#{contact},mobile=#{mobile},address=#{address},
+           registerTime=#{registerTime},provinceId=#{provinceId},cityId=#{cityId}
+            <if test="agentIcon != null and agentIcon.length>0">
+                ,agentIcon=#{agentIcon}
+            </if>
+           where agentId=#{agentId}
+    </update>
+
+    <insert id="add" parameterType="com.ygb.entity.AgentInfo">
+        insert into agentinfo(agentName,agentIcon,carPark,glasses,children,invalid,contact,mobile,address,registerTime,provinceId,cityId)
+        values(#{agentName},#{agentIcon},#{carPark},#{glasses},#{children},#{invalid},#{contact},#{mobile},#{address},#{registerTime},#{provinceId},#{cityId})
+    </insert>
+
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.AgentInfo">
+        SELECT  a.*,p.provinceName,c.cityName
+        FROM agentinfo a
+        left JOIN province p on a.provinceId = p.provinceId
+        left JOIN  city c ON  a.cityId = c.cityId
+        where agentId=#{agentid}
+
+    </select>
+
+    <delete id="del" parameterType="String">
+        delete from agentinfo where agentId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--前端选座页面-->
+    <select id="getPlanById" parameterType="int" resultType="com.ygb.entity.PlanVo">
+       select p.planId,p.movieId,h.hallId,p.playDay,h.hallName,t.hallTypeName,p1.playTimeName,m.movieName,p.seatPrice,p1.startTime,p1.endTime,m.remark,a.agentName from moviehall h
+        INNER JOIN plan p on h.hallid=p.hallid
+        INNER JOIN halltype t on t.hallTypeId=h.hallTypeId
+        INNER JOIN playtime p1 on p1.playTimeId=p.playTimeId
+        INNER JOIN movie m on m.movieId=p.movieId
+        INNER JOIN agentinfo a ON a.agentId = h.agentId
+        where p.planId=#{planId}
+    </select>
+
+
+
+</mapper>

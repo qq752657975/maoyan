@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.PlanDAO">
+
+
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.PlanVo">
+        select * from plan WHERE  planId=#{planId}
+    </select>
+    <!--列表-->
+    <select id="list" resultType="com.ygb.entity.PlanVo">
+        select p.*,h.hallName,m.movieName,a.agentName,t.playTimeName,t.startTime,t.endTime from plan p
+        INNER JOIN moviehall h on p.hallId=h.hallId
+        INNER JOIN movie m on p.movieId=m.movieId
+        INNER JOIN agentinfo a on p.agentId = a.agentId
+        INNER JOIN playtime t on p.playTimeId=t.playTimeId
+        <where>
+        <if test="plan.hallId>0">
+            and p.hallId=#{plan.hallId}
+        </if>
+        <if test="plan.movieId>0">
+            and p.movieId=#{plan.movieId}
+        </if>
+        <if test="plan.agentId>0">
+            and p.agentId=#{plan.agentId}
+        </if>
+        <if test="plan.playTimeId>0">
+            and p.playTimeId=#{plan.playTimeId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay  between #{plan.startTime} and #{plan.endTime}
+        </if>
+        </where>
+        order by p.playDay desc
+        limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) from plan p
+        INNER JOIN moviehall h on p.hallId=h.hallId
+        INNER JOIN movie m on p.movieId=m.movieId
+        INNER JOIN agentinfo a on p.agentId = a.agentId
+        INNER JOIN playtime t on p.playTimeId=t.playTimeId
+        <where>
+        <if test="plan.hallId>0">
+            and p.hallId=#{plan.hallId}
+        </if>
+        <if test="plan.movieId>0">
+            and p.movieId=#{plan.movieId}
+        </if>
+        <if test="plan.agentId>0">
+            and p.agentId=#{plan.agentId}
+        </if>
+        <if test="plan.playTimeId>0">
+            and p.playTimeId=#{plan.playTimeId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay  between #{plan.startTime} and #{plan.endTime}
+        </if>
+        </where>
+    </select>
+    <delete id="del" >
+        delete from plan where planId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <insert id="add" parameterType="com.ygb.entity.PlanVo" useGeneratedKeys="true" keyColumn="planId"  keyProperty="planId">
+        INSERT INTO plan(hallId,movieId,agentId,playTimeId,seatPrice,playDay)  values(#{hallId},#{movieId},#{agentId},#{playTimeId},#{seatPrice},#{playDay})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.PlanVo">
+            UPDATE plan set hallId=#{hallId},movieId=#{movieId},agentId=#{agentId},playTimeId=#{playTimeId},seatPrice=#{seatPrice},playDay=#{playDay} where planId=#{planId}
+    </update>
+    <select id="hallList" parameterType="int" resultType="com.ygb.entity.MovieHallVo">
+        select * from movieHall where 1=1
+        <if test="agentId>0">
+            and agentId=#{agentId}
+        </if>
+    </select>
+    <select id="movieList" resultType="com.ygb.entity.MovieVo">
+        select * from movie where playType=2
+    </select>
+    <select id="agentList" parameterType="int" resultType="com.ygb.entity.AgentInfo">
+        select * from agentinfo where 1=1
+        <if test="agentId>0">
+            and agentId=#{agentId}
+        </if>
+    </select>
+    <select id="playTimeList" resultType="com.ygb.entity.PlayTimeVo">
+        select * from playTime
+    </select>
+</mapper>

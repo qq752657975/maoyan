@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.SysLogDAO">
+
+
+    <select id="list" resultType="com.ygb.entity.SysLogVo">
+        select * from syslog
+        <where>
+        <if test="log.userName!=null and log.userName !=''">
+            and userName like '%${log.userName}%'
+        </if>
+        <if test="log.logType!=0">
+            and logType=#{log.logType}
+        </if>
+        <if test="log.content!=null and log.content !=''">
+            and content like '%${log.content}%'
+        </if>
+        <if test="log.sdate!=null and log.sdate !='' and log.edate!=null and log.edate !=''" >
+            and createDate  BETWEEN #{log.sdate} and #{log.edate}
+        </if>
+        </where>
+        order by createDate desc limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) from syslog where 1=1
+        <if test="log.userName!=null and log.userName !=''">
+            and userName like '%${log.userName}%'
+        </if>
+        <if test="log.logType>0">
+            and logType=#{log.logType}
+        </if>
+        <if test="log.content!=null and log.content !=''">
+            and content like '%${log.content}%'
+        </if>
+        <if test="log.sdate!=null and log.sdate !='' and log.edate!=null and log.edate !=''" >
+            and createDate  BETWEEN #{log.sdate} and #{log.edate}
+        </if>
+    </select>
+    <insert id="add" parameterType="com.ygb.entity.SysLogVo">
+        INSERT INTO syslog(userid,username,logType,content,createDate,ipAddress)  values(#{managerId},#{userName},#{logType},#{content},now(),#{ipAddress})
+    </insert>
+</mapper>

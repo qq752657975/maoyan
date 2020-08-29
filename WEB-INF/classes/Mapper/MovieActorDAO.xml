@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.MovieActorDAO">
+
+    <select id="list" parameterType="com.ygb.entity.MovieActorVo" resultType="com.ygb.entity.MovieActorVo">
+        select m.*,a.actorName,a.cimg,mm.movieName from movieActor m
+        left join actor a on m.actorId=a.actorId
+        left join movie mm on m.movieId=mm.movieId
+        where m.movieId=#{movieId}
+        order by m.actorType limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" parameterType="int" resultType="int">
+        select count(*) from movieActor m
+        left join actor a on m.actorId=a.actorId
+        left join movie mm on m.movieId=mm.movieId
+        where m.movieId=#{movieId}
+    </select>
+
+    <select id="actorList" resultType="com.ygb.entity.ActorVo">
+        select * from actor order by actorId desc
+    </select>
+
+    <insert id="add" parameterType="com.ygb.entity.MovieActorVo">
+        insert into movieActor(actorId,movieId,actorType)  values(#{actorId},#{movieId},#{actorType})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.MovieActorVo">
+        UPDATE movieActor set actorId=#{actorId},movieId=#{movieId},actorType=#{actorType} where movieActorId=#{movieActorId}
+    </update>
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.MovieActorVo">
+        SELECT  * from movieActor where movieActorId=#{movieActorId}
+    </select>
+    <delete id="del" parameterType="int">
+        delete from movieActor where movieActorId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+</mapper>

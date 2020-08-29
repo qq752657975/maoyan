@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ygb.Dao.IHallTypeDao" >
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.HallTypeVo">
+        select * from hallType WHERE  hallTypeId=#{hallTypeId}
+    </select>
+
+    <!--管理员列表-->
+    <select id="list" resultType="com.ygb.entity.HallTypeVo">
+        select * from hallType limit #{pager.startRow},#{pager.pageRow}
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*) from hallType
+    </select>
+
+    <delete id="del" >
+        delete from hallType where hallTypeId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+
+    <insert id="add" parameterType="com.ygb.entity.HallTypeVo" useGeneratedKeys="true" keyColumn="hallTypeId"  keyProperty="hallTypeId">
+        INSERT INTO hallType(hallTypeName)  values(#{hallTypeName})
+    </insert>
+
+    <update id="update" parameterType="com.ygb.entity.HallTypeVo">
+        UPDATE hallType set hallTypeName=#{hallTypeName} where hallTypeId=#{hallTypeId}
+    </update>
+</mapper>

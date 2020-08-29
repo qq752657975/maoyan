@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+
+<configuration>
+
+    <settings>
+        <!-- 配置log4j输出日志信息 -->
+        <setting name="logImpl" value="LOG4J" />
+        <!--开始延迟加载-->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <!--关闭立即加载-->
+        <setting name="aggressiveLazyLoading" value="false"/>
+        <!--自动驼峰对照 表列名为b_id 实体属性名为 bId-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--开启二级缓存-->
+        <setting name="cacheEnabled" value="true"/>
+        <!--sql执行器  默认:SIMPLE -->
+        <!--可选值：
+                        REUSE ：可以重用sql语句
+                        BATCH ：批量处理-->
+        <setting name="defaultExecutorType" value="SIMPLE"/>
+    </settings>
+    <!-- 配置mybatis的log实现为LOG4J -->
+    <typeAliases>
+
+    </typeAliases>
+
+    <plugins>
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!--helperDialect 方言:就表示此插件针对哪个数据库进行优化处理
+            这个方言可以不配置,因为此插件可以依据你的 url 的信息来推断出
+            你用的数据库是哪一个
+            -->
+            <property name="helperDialect" value="mysql"/>
+            <!--分页合理化参数-->
+            <property name="reasonable" value="true"/>
+        </plugin>
+    </plugins>
+
+</configuration>

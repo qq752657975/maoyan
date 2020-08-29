@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.IMovieDAO">
+
+    <select id="list" parameterType="com.ygb.entity.MovieVo" resultType="com.ygb.entity.MovieVo">
+        select m.*,y.movieYearName,t.movieTypeName,a.areaName from movie m
+        left join movieYear y on m.movieYearId=y.movieYearId
+        left join movieType t on m.movieTypeId=t.movieTypeId
+        left join area a on m.movieAreaId=a.areaId
+        where 1=1
+        <if test="movie.movieTypeId>0">
+            and m.movieTypeId=#{movie.movieTypeId}
+        </if>
+        <if test="movie.movieYearId>0">
+            and m.movieYearId=#{movie.movieYearId}
+        </if>
+        <if test="movie.movieAreaId>0">
+            and m.movieAreaId=#{movie.movieAreaId}
+        </if>
+        <if test="movie.playType>0">
+            and m.playType=#{movie.playType}
+        </if>
+        <if test="movie.movieName !=null and movie.movieName !=''">
+            and m.movieName like '%${movie.movieName}%'
+        </if>
+        order by m.movieTypeId, m.movieAreaId limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" parameterType="com.ygb.entity.MovieVo" resultType="int">
+        select count(*) from movie m
+        left join movieYear y on m.movieYearId=y.movieYearId
+        left join movieType t on m.movieTypeId=t.movieTypeId
+        left join area a on m.movieAreaId=a.areaId
+        <where>
+        <if test="movie.movieTypeId>0">
+            and m.movieTypeId=#{movie.movieTypeId}
+        </if>
+        <if test="movie.movieYearId>0">
+            and m.movieYearId=#{movie.movieYearId}
+        </if>
+        <if test="movie.movieAreaId>0">
+            and m.movieAreaId=#{movie.movieAreaId}
+        </if>
+        <if test="movie.playType>0">
+            and m.playType=#{movie.playType}
+        </if>
+        <if test="movie.movieName !=null and movie.movieName !=''">
+            and m.movieName like '%${movie.movieName}%'
+        </if>
+        </where>
+    </select>
+    <select id="areaList" resultType="com.ygb.entity.AreaVo">
+        select * from area
+    </select>
+    <select id="yearList" parameterType="int" resultType="com.ygb.entity.MovieYearVo">
+        select * from movieYear
+    </select>
+    <select id="movieTypeList" parameterType="int" resultType="com.ygb.entity.MovieTypeVo">
+        select * from movieType
+    </select>
+
+    <insert id="add" parameterType="com.ygb.entity.MovieVo">
+        insert into movie(movieName,movieTypeId,movieYearId,movieAreaId,playType,hopeLook,seq,content,cimg,registerTime,score)
+        values(#{movieName},#{movieTypeId},#{movieYearId},#{movieAreaId},#{playType},#{hopeLook},#{seq},#{content},#{cimg},#{registerTime},0)
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.MovieVo">
+        UPDATE movie set movieName=#{movieName},movieTypeId=#{movieTypeId},movieYearId=#{movieYearId},movieAreaId=#{movieAreaId},playType=#{playType},seq=#{seq},registerTime=#{registerTime}
+        <if test="cimg !=null and cimg.length>0">
+            ,cimg=#{cimg}
+        </if>
+        where movieId=#{movieId}
+    </update>
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.MovieVo">
+        SELECT  * from movie where movieId=#{movieId}
+    </select>
+    <delete id="del" parameterType="int">
+        delete from movie where movieId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <!--票房报表使用,不统计即将上映类型的票房-->
+    <select id="movieList" resultType="com.ygb.entity.MovieVo">
+        select * from movie where playType in(2,3) order by playType
+    </select>
+    <!--前端首页-->
+    <select id="movieList1" resultType="com.ygb.entity.MovieVo" parameterType="int">
+        select * from movie where playType=#{playType} order by registerTime desc
+    </select>
+    <!--前端首页,最受期待-->
+    <select id="movieLoveList" parameterType="int" resultType="com.ygb.entity.MovieVo">
+        select * from movie where playType=1 order by hopeLook desc
+        <if test="page==1">
+            limit 0,10
+        </if>
+    </select>
+    <!--评价排名-->
+    <select id="movieForum" parameterType="int" resultType="com.ygb.entity.MovieVo">
+        select * from movie order by score desc
+        <if test="page==1">
+          limit 0,10
+        </if>
+    </select>
+    <!--电影列表-->
+    <select id="movieListByCondition" parameterType="com.ygb.entity.MovieVo" resultType="com.ygb.entity.MovieVo">
+        select * from movie where 1=1
+        <if test="movie.playType>0">
+            and playType=#{movie.playType}
+        </if>
+        <if test="movie.movieTypeId>0">
+            and movieTypeId=#{movie.movieTypeId}
+        </if>
+        <if test="movie.movieYearId>0">
+            and movieYearId=#{movie.movieYearId}
+        </if>
+        <if test="movie.movieAreaId>0">
+            and movieAreaId=#{movie.movieAreaId}
+        </if>
+    </select>
+    <!--搜索电影列表-->
+    <select id="movieListByName" parameterType="string" resultType="com.ygb.entity.MovieVo">
+        select * from movie where 1=1
+        <if test="movieName !=null and movieName !=''">
+            and movieName like '%${movieName}%'
+        </if>
+
+    </select>
+
+    <!--电影明细-->
+    <select id="movieDetailById" parameterType="int" resultType="com.ygb.entity.MovieVo">
+        select m.*,y.movieYearName,t.movieTypeName,a.areaName,(select sum(seatPrice)  from orders o INNER JOIN plan p on o.planId=p.planId where movieId=#{movieId}) saleTotal from movie m
+        left join movieYear y on m.movieYearId=y.movieYearId
+        left join movieType t on m.movieTypeId=t.movieTypeId
+        left join area a on m.movieAreaId=a.areaId
+        where  m.movieId=#{movieId}
+    </select>
+    <!--电影演员列表-->
+    <select id="movieActor" parameterType="int" resultType="com.ygb.entity.MovieActorVo">
+        select m.*,a.actorName,a.cimg,mm.movieName from movieActor m
+        left join actor a on m.actorId=a.actorId
+        left join movie mm on m.movieId=mm.movieId
+        where m.movieId=#{movieId}
+        order by m.actorType
+    </select>
+    <!--评论-->
+    <select id="forumList" parameterType="int" resultType="com.ygb.entity.ForumVo">
+        select f.*,u.headimg,u.userName from forum f INNER JOIN users u on u.mobile=f.mobile where f.movieId=#{movieId} order by forumId desc
+    </select>
+    <select id="hopeLook" parameterType="int">
+        update movie set hopeLook=hopeLook+1 where movieId=#{movieId}
+    </select>
+    <!--主演-->
+    <select id="majorActor" parameterType="int" resultType="com.ygb.entity.ActorVo">
+      select actorName from actor where actorId in (select actorId from movieactor where actorType=2 and movieId=#{movieId})
+    </select>
+    <!--前端首页正在热映-->
+    <select id="movieLoveList1"  resultType="com.ygb.entity.MovieVo">
+        select * from movie where playType=2 order by hopeLook desc
+    </select>
+    <!--前端首页即将上映-->
+    <select id="movieLoveList2"  resultType="com.ygb.entity.MovieVo">
+        select * from movie where playType=1 order by hopeLook desc
+    </select>
+    <!--前台单个电影详情-->
+    <select id="movieInfo" parameterType="com.ygb.entity.MovieVo" resultType="com.ygb.entity.MovieVo">
+    select m.*,y.movieYearName,t.movieTypeName,a.areaName from movie m
+    left join movieYear y on m.movieYearId=y.movieYearId
+    left join movieType t on m.movieTypeId=t.movieTypeId
+    left join area a on m.movieAreaId=a.areaId
+    where m.movieId = #{movieId}
+    </select>
+    <!--单个电影评论-->
+    <select id="byForum" parameterType="int" resultType="com.ygb.entity.ForumVo">
+        select f.*,u.headimg from forum f
+        left join users u on u.mobile=f.mobile
+        where movieId=#{movieId} limit #{pager.startRow},#{pager.pageRow}
+    </select>
+
+    <!--查询当天播放该电影的影院-->
+    <select id="movieAgent" parameterType="com.ygb.entity.PlanVo" resultType="com.ygb.entity.AgentInfo">
+        SELECT a.agentName,a.address,a.agentId,p.seatPrice FROM agentinfo a
+        left JOIN plan p ON a.agentId = p.agentId
+        WHERE p.playDay=#{play.playDay} AND p.movieId=#{play.movieId} LIMIT #{pager.startRow},#{pager.pageRow}
+    </select>
+
+    <!--前台显示影院的正在热映的电影-->
+    <select id="agentMovieList" parameterType="int" resultType="com.ygb.entity.MovieVo">
+        SELECT distinct m.movieId,m.movieName,m.score,o.movieTypeName,m.cimg FROM plan p
+        LEFT JOIN movie m ON m.movieId = p.movieId
+        LEFT JOIN agentinfo a ON a.agentId = p.agentid
+        LEFT JOIN movietype o ON o.movieTypeId = m.movieTypeId
+        WHERE p.agentId = #{agentId} AND m.playType = 2
+    </select>
+    <!--获取该电影的排片信息-->
+    <select id="moviePlanList" parameterType="com.ygb.entity.PlanVo" resultType="com.ygb.entity.PlanVo">
+        SELECT p.seatPrice,t.*,h.hallId,h.hallName,m.remark,p.planId FROM plan p
+        LEFT JOIN playtime t ON t.playTimeId = p.playTimeId
+        LEFT JOIN moviehall h ON h.hallId = p.hallId
+        LEFT JOIN movie m ON m.movieId = p.movieId
+        WHERE p.agentId =#{play.agentId} AND p.playDay = #{play.playDay} AND p.movieId = #{play.movieId}
+        LIMIT #{pager.startRow},#{pager.pageRow}
+    </select>
+
+</mapper>

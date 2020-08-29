@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ygb.Dao.IUserDao" >
+    <select id="getById" parameterType="string" resultType="com.ygb.entity.UserVo">
+        select * from users WHERE  mobile=#{mobile}
+    </select>
+    <!--管理员列表-->
+    <select id="list" resultType="com.ygb.entity.UserVo">
+        select * from users
+        <where>
+        <if test="user.mobile!=null and user.mobile !=''">
+            and (mobile like '%${user.mobile}%' or userName like '%${user.mobile}%')
+        </if>
+        </where>
+        limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) from users
+        <where>
+        <if test="user.mobile!=null and user.mobile !=''">
+            and (mobile like '%${user.mobile}%' or userName like '%${user.mobile}%')
+        </if>
+        </where>
+    </select>
+    <delete id="del" >
+        delete from users where mobile in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <insert id="add" parameterType="com.ygb.entity.UserVo">
+        INSERT INTO users(mobile,sex,regDate,state,headImg)  values(#{mobile},#{sex},now(),#{state},#{headImg})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.UserVo">
+        UPDATE users
+        <set>
+            <if test="password != null and password != ''">
+                password=#{password},
+            </if>
+            <if test="userName != null and userName != ''">
+                userName=#{userName},
+            </if>
+            <if test="sex != null and sex != ''">
+                sex=#{sex},
+            </if>
+            <if test="sign != null and sign != ''">
+                sign=#{sign},
+            </if>
+            <if test="state > -1">
+                state=#{state},
+            </if>
+            <if test="headImg != null and headImg != ''">
+                headImg=#{headImg},
+            </if>
+            <if test="major != null and major != ''">
+                major=#{major},
+            </if>
+            <if test="hobbit != null and hobbit != ''">
+                hobbit=#{hobbit},
+            </if>
+            marry=#{marry}
+        </set>
+         where mobile=#{mobile}
+    </update>
+</mapper>

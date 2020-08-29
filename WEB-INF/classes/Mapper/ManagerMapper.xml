@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ygb.Dao.IManagerDao" >
+
+
+    <!--登录使用-->
+    <resultMap type="com.ygb.entity.Manager" id="mgrMap">
+        <id column="managerId" property="managerId"/>
+        <result column="managerAccount" property="managerAccount"/>
+        <result column="managerPassword" property="managerPassword"/>
+        <result column="managerType" property="managerType"/>
+        <result column="managerName" property="managerName"/>
+        <result column="sex" property="sex"/>
+        <result column="invalid" property="invalid"/>
+        <result column="contact" property="contact"/>
+        <result column="agentId" property="agentId"/>
+        <result column="img" property="img"></result>
+        <association property="agent" javaType="com.ygb.entity.AgentInfo">
+            <id column="agentId" property="agentId"/>
+            <result column="agentName" property="agentName"/>
+            <result column="invalid" property="invalid"/>
+        </association>
+    </resultMap>
+    <!--管理员列表使用-->
+    <resultMap type="com.ygb.entity.Manager" id="mgrListMap">
+        <id column="managerId" property="managerId"/>
+        <result column="managerAccount" property="managerAccount"/>
+        <result column="managerPassword" property="managerPassword"/>
+        <result column="managerType" property="managerType"/>
+        <result column="managerName" property="managerName"/>
+        <result column="sex" property="sex"/>
+        <result column="invalid" property="invalid"/>
+        <result column="contact" property="contact"/>
+        <result column="agentId" property="agentId"/>
+        <association property="agent" javaType="com.ygb.entity.AgentInfo">
+            <id column="agentId" property="agentId"/>
+            <result column="agentName" property="agentName"/>
+            <result column="provinceName" property="provinceName"/>
+        </association>
+    </resultMap>
+
+    <!--登录-->
+    <select id="login" parameterType="com.ygb.entity.Manager" resultMap="mgrMap">
+        select m.managerId,m.managerAccount,m.managerType,m.img,m.managerName,m.sex,m.contact,m.agentId,a.agentName,a.invalid from manager m left join agentinfo a on m.agentId=a.agentId
+        WHERE  managerAccount=#{mgr.managerAccount} and managerPassword=#{mgr.managerPassword} and m.invalid=1
+    </select>
+    <!--查询用户是否存在-->
+    <select id="getManagerAccount" parameterType="java.lang.String" resultType="com.ygb.entity.Manager">
+        select * from manager where managerAccount=#{managerAccount}
+    </select>
+    <!--查询单个管理信息-->
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.Manager">
+        select * from manager where managerId = #{managerId}
+    </select>
+    <!--修改个人信息-->
+    <update id="updateInfo" parameterType="com.ygb.entity.Manager">
+        update manager set managerName = #{managerName},sex = #{sex},contact = #{contact}
+        <if test="img != null and img != ''">
+            ,img = #{img}
+        </if>
+        where managerId = #{managerId}
+    </update>
+    <!--修改密码-->
+    <update id="updatePwd" parameterType="com.ygb.entity.Manager">
+        update manager set managerPassword = #{managerPassword} where managerId = #{managerId}
+    </update>
+
+    <!--查询管理员列表-->
+    <select id="mgrList" resultMap="mgrListMap">
+        select m.managerId,m.managerAccount,m.managerPassword,m.managerType,m.managerName,m.sex,m.contact,m.agentId,m.invalid,a.agentName,a.provinceId,p.provinceName from manager m
+        left join agentinfo a on m.agentId=a.agentId
+        left join province p on a.provinceId=p.provinceId
+        <where>
+            <if test="mgr.managerAccount != null and mgr.managerAccount !=''">
+                and m.managerAccount like concat('%',#{mgr.managerAccount},'%')
+            </if>
+            <if test="agent.provinceId>0">
+                and a.provinceId=#{agent.provinceId}
+            </if>
+            <if test="agent.agentName !=null and agent.agentName !=''">
+                and a.agentName like concat('%',#{agent.agentName},'%')
+            </if>
+            <if test="agent.mobile !=null and agent.mobile !=''">
+                and m.managerAccount like  concat('%',#{agent.mobile},'%')
+            </if>
+            <if test="agent.agentId>0">
+                and a.agentId=#{agent.agentId}
+            </if>
+        </where>
+        limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <!--分页统计记录数-->
+    <select id="count" resultType="int">
+        select count(1) from manager m
+        left join agentinfo a on m.agentId=a.agentId
+        left join province p on a.provinceId=p.provinceId
+        <where>
+        <if test="agent.agentId>0">
+            and a.agentId=#{agent.agentId}
+        </if>
+        <if test="agent.provinceId>0">
+            and a.provinceId=#{agent.provinceId}
+        </if>
+        <if test="agent.agentName !=null and agent.agentName !=''">
+            and a.agentName like '%${agent.agentName}%'
+        </if>
+        <if test="agent.mobile !=null and agent.mobile !=''">
+            and m.managerAccount like '%${agent.mobile}%'
+        </if>
+        </where>
+    </select>
+    <!--查询所有的城市-->
+    <select id="provinceList" resultType="com.ygb.entity.ProvinceVo">
+        select * from province order by seq
+    </select>
+    <!--删除管理员-->
+    <delete id="del" >
+        delete from manager where managerId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <!--查询所有的影院信息-->
+    <select id="agentList" parameterType="int" resultType="com.ygb.entity.AgentInfo">
+        SELECT  * from agentinfo
+        <where>
+            <if test="agentId>0" >
+                and agentId= #{agentId}
+            </if>
+        </where>
+        order by agentName
+    </select>
+    <!--新增管理员-->
+    <insert id="add" parameterType="com.ygb.entity.Manager">
+        INSERT INTO manager(managerAccount,managerPassword,managerType,managerName,sex,contact,agentId,invalid)
+        values(#{managerAccount},#{managerPassword},#{managerType},#{managerName},#{sex},#{contact},#{agentId},#{invalid})
+    </insert>
+    <!--修改管理员信息-->
+    <update id="update" parameterType="com.ygb.entity.Manager">
+        UPDATE manager set managerAccount=#{managerAccount},managerPassword=#{managerPassword},managerType=#{managerType},managerName=#{managerName},sex=#{sex},contact=#{contact},agentId=#{agentId},invalid=#{invalid} where managerId=#{managerId}
+    </update>
+
+</mapper>

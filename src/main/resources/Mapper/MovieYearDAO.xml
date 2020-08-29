@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.IMovieYearDAO">
+
+
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.MovieYearVo">
+        select * from movieYear WHERE  movieYearId=#{movieYearId}
+    </select>
+    <!--管理员列表-->
+    <select id="list" resultType="com.ygb.entity.MovieYearVo">
+        select * from movieYear limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) from movieYear
+    </select>
+    <delete id="del" >
+        delete from movieYear where movieYearId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <insert id="add" parameterType="com.ygb.entity.MovieYearVo" useGeneratedKeys="true" keyColumn="movieYearId"  keyProperty="movieYearId">
+        INSERT INTO movieYear(movieYearName)  values(#{movieYearName})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.MovieYearVo">
+        UPDATE movieYear set movieYearName=#{movieYearName} where movieYearId=#{movieYearId}
+    </update>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.IPlayTimeDAO">
+
+
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.PlayTimeVo">
+        select * from playTime WHERE  playTimeId=#{playTimeId}
+    </select>
+    <!--管理员列表-->
+    <select id="list" resultType="com.ygb.entity.PlayTimeVo">
+        select * from playTime limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) from playTime
+    </select>
+    <delete id="del" >
+        delete from playTime where playTimeId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <insert id="add" parameterType="com.ygb.entity.PlayTimeVo" useGeneratedKeys="true" keyColumn="playTimeId"  keyProperty="playTimeId">
+        INSERT INTO playTime(playTimeName,startTime,endTime)  values(#{playTimeName},#{startTime},#{endTime})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.PlayTimeVo">
+        UPDATE playTime set playTimeName=#{playTimeName},startTime=#{startTime},endTime=#{endTime} where playTimeId=#{playTimeId}
+    </update>
+</mapper>

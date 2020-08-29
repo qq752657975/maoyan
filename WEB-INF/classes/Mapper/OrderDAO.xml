@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.IOrderDao">
+
+
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.OrderVo">
+        select * from orders WHERE  orderId=#{orderId}
+    </select>
+    <!--列表-->
+    <select id="list" parameterType="int" resultType="com.ygb.entity.OrderVo">
+        select o.*,a.agentName,h.hallName,m.movieName,t.playTimeName,t.startTime,t.endTime,s.seatName,p.playDay from orders o
+        INNER JOIN  plan p on o.planId=p.planId
+        INNER JOIN moviehall h on p.hallId=h.hallId
+        INNER JOIN movie m on p.movieId=m.movieId
+        INNER JOIN agentinfo a on p.agentId = a.agentId
+        INNER JOIN playtime t on p.playTimeId = t.playTimeId
+        INNER JOIN hallseat s on o.hallSeatId=s.hallSeatId
+        where o.planId=#{planId} order by orderId DESC limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="count" parameterType="int" resultType="int">
+        select count(*) from orders o
+        INNER JOIN  plan p on o.planId=p.planId
+        INNER JOIN moviehall h on p.hallId=h.hallId
+        INNER JOIN movie m on p.movieId=m.movieId
+        INNER JOIN agentinfo a on p.agentId = a.agentId
+        INNER JOIN playtime t on p.playTimeId = t.playTimeId
+        INNER JOIN hallseat s on o.hallSeatId=s.hallSeatId
+        where o.planId=#{planId}
+    </select>
+    <delete id="del" >
+        delete from orders where orderId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <insert id="add" parameterType="com.ygb.entity.OrderVo" useGeneratedKeys="true" keyColumn="orderId"  keyProperty="orderId">
+        INSERT INTO orders(planId,orderNumber,mobile,hallSeatId,salePrice,payType,orderTime,state,inval)  values(#{planId},#{orderNumber},#{mobile},#{hallSeatId},#{salePrice},#{payType},now(),#{state},#{inval})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.OrderVo">
+        UPDATE orders set state=#{state} where orderId=#{orderId}
+    </update>
+    <!--后台下拉框,能购票座位列表-->
+    <select id="seatList" resultType="com.ygb.entity.HallSeatVo">
+        select * from hallseat where hallId=#{hallId} and state=1 and hallSeatId not in(SELECT hallSeatId from orders where planId=#{planId} AND state="购票")
+    </select>
+    <!--前台购票座位列表-->
+    <select id="seatBuyList" resultType="com.ygb.entity.HallSeatVo">
+        select hallSeatId,hallId,seatName,IFNULL((select 3 from orders where planId=#{planId} and hallSeatId=s.hallSeatId),state) state from hallseat s where hallId=#{hallId}
+    </select>
+    <select id="plan" parameterType="int" resultType="com.ygb.entity.PlanVo">
+        select * from plan where planId=#{planId}
+    </select>
+    <update id="updSeat">
+        update hallseat set state=#{state} where hallSeatId=#{hallSeatId}
+    </update>
+    <!--票房统计-->
+    <select id="movieRep" resultType="com.ygb.entity.OrderVo">
+        select m.movieName,sum(o.salePrice) salePrice from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        INNER JOIN movie m on p.movieId=m.movieId
+        where o.state='购票' and m.playType in(2,3)
+        <if test="plan.movieId>0">
+            and p.movieId=#{plan.movieId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay BETWEEN #{plan.startTime} and #{plan.endTime}
+        </if>
+        group by p.movieId
+        order by sum(o.salePrice) desc
+        limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="movieCountRep" resultType="int">
+        select COUNT(1) from(SELECT COUNT(p.movieId) from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        INNER JOIN movie m on p.movieId=m.movieId
+        where o.state='购票' and m.playType in(2,3)
+        <if test="plan.movieId>0">
+            and p.movieId=#{plan.movieId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay BETWEEN #{plan.startTime} and #{plan.endTime}
+        </if>
+        group by p.movieId)gg
+    </select>
+
+    <!--影院统计-->
+    <select id="agentRep" resultType="com.ygb.entity.OrderVo">
+        select a.agentName,sum(o.salePrice) salePrice from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        INNER JOIN agentinfo a on p.agentId=a.agentId
+        where o.state='购票'
+        <if test="plan.agentId>0">
+            and p.agentId=#{plan.agentId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay BETWEEN #{plan.startTime} and #{plan.endTime}
+        </if>
+        group by a.agentName
+        limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="agentCountRep" resultType="int">
+        select count(1) from (select a.agentName from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        INNER JOIN agentinfo a on p.agentId=a.agentId
+        where o.state='购票'
+        <if test="plan.agentId>0">
+            and p.agentId=#{plan.agentId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay BETWEEN #{plan.startTime} and #{plan.endTime}
+        </if>
+        group by a.agentName)gg
+    </select>
+    <select id="agentList" parameterType="int" resultType="com.ygb.entity.AgentInfo">
+        select * from agentinfo
+        <where>
+        <if test="agentId>0">
+            and agentId=#{agentId}
+        </if>
+        </where>
+    </select>
+    <!--影厅统计-->
+    <select id="hallRep" resultType="com.ygb.entity.OrderVo">
+        select a.agentName,h.hallName,sum(o.salePrice) salePrice from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        INNER JOIN agentinfo a on p.agentId=a.agentId
+        INNER JOIN moviehall h on p.hallId=p.hallId
+        INNER JOIN hallseat s on s.hallSeatId = o.hallSeatId and s.hallId=h.hallId
+        where o.state='购票'
+        <if test="plan.agentId>0">
+            and p.agentId=#{plan.agentId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay BETWEEN #{plan.startTime} and #{plan.endTime}
+        </if>
+        group by a.agentName,h.hallName
+        limit #{pager.startRow},#{pager.pageRow}
+    </select>
+    <select id="hallCountRep" resultType="int">
+        select count(1) from (select a.agentName from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        INNER JOIN agentinfo a on p.agentId=a.agentId
+        INNER JOIN moviehall h on p.hallId=p.hallId
+        INNER JOIN hallseat s on s.hallSeatId = o.hallSeatId and s.hallId=h.hallId
+        where o.state='购票'
+        <if test="plan.agentId>0">
+            and p.agentId=#{plan.agentId}
+        </if>
+        <if test="plan.startTime !=null and plan.startTime !='' and plan.endTime !=null and plan.endTime !=''">
+            and p.playDay BETWEEN #{plan.startTime} and #{plan.endTime}
+        </if>
+        group by a.agentName,h.hallName)gg
+    </select>
+    <!--今日票房-->
+    <select id="saleTop" resultType="com.ygb.entity.OrderVo">
+        select m.movieId,m.movieName,sum(salePrice) salePrice from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        INNER JOIN movie m on p.movieId=m.movieId
+        where p.playDay = CURDATE()
+        group by m.movieId,m.movieName
+        order by SUM(salePrice) desc limit 0,5
+    </select>
+    <!--今日票房汇总-->
+    <select id="saleAll" resultType="float">
+        select IFNULL(sum(salePrice),0) salePrice from orders o
+        INNER JOIN plan p on o.planId=p.planId
+        where p.playDay = CURDATE()
+    </select>
+    <!--我的订单-->
+    <select id="myOrder" parameterType="string" resultType="com.ygb.entity.OrderVo">
+        select o.mobile,a.agentName,h.hallName,p.playDay,t.playTimeName,s.seatName,o.salePrice,o.orderId,o.orderNumber,o.inval,m.movieName,o.orderTime from orders o
+        INNER JOIN plan p on o.planId = p.planId
+        INNER JOIN moviehall h on p.hallId=h.hallId
+        INNER JOIN agentinfo a on p.agentId=a.agentId
+        INNER JOIN playtime t on p.playTimeId=t.playTimeId
+        INNER JOIN hallseat s on o.hallSeatId=s.hallSeatId
+        INNER JOIN movie m ON p.movieId=m.movieId
+        where o.mobile=${mobile}
+        order by p.playDay desc,o.orderId
+    </select>
+    <!--查询座位是否已经被定-->
+    <select id="bySeat"  resultType="com.ygb.entity.OrderVo">
+       select * from orders where planId=#{planId} and hallSeatId IN (#{hallSeatId}) and inval in (1,2)
+    </select>
+    <!--支付 修改订单状态-->
+    <update id="setOrderInvalid" parameterType="string">
+        update orders set inval = 1,payType=#{payType} where orderNumber = #{orderNumber}
+    </update>
+    <!--查询指定状态-->
+    <select id="orderInval" parameterType="String" resultType="com.ygb.entity.OrderVo">
+        select * from orders where orderNumber = #{orderNumber}
+    </select>
+    <!--修改失效订单状态-->
+    <update id="updateOrderInvalid" parameterType="java.lang.Long">
+        update orders set inval = -1 where orderNumber = #{orderNumber}
+    </update>
+
+</mapper>
