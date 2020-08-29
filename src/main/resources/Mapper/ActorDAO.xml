@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ygb.Dao.ActorDAO">
+
+
+    <select id="getById" parameterType="int" resultType="com.ygb.entity.ActorVo">
+        select * from actor WHERE  actorId=#{actorId}
+    </select>
+    <!--管理员列表-->
+    <select id="list" resultType="com.ygb.entity.ActorVo">
+        select * from actor order by actorId desc
+        <if test="pager !=null">
+          limit #{pager.startRow},#{pager.pageRow}
+        </if>
+    </select>
+    <select id="count" resultType="int">
+        select count(*) from actor
+    </select>
+    <delete id="del" >
+        delete from actor where actorId in
+        <foreach collection="array" item="id" separator="," open="(" close=")">
+            ${id}
+        </foreach>
+    </delete>
+    <insert id="add" parameterType="com.ygb.entity.ActorVo" useGeneratedKeys="true" keyColumn="actorId"  keyProperty="actorId">
+        INSERT INTO actor(actorName,cimg)  values(#{actorName},#{cimg})
+    </insert>
+    <update id="update" parameterType="com.ygb.entity.ActorVo">
+        UPDATE actor set actorName=#{actorName}
+        <if test="cimg != null and cimg.length>0">
+            ,cimg=#{cimg}
+        </if>
+         where actorId=#{actorId}
+    </update>
+</mapper>

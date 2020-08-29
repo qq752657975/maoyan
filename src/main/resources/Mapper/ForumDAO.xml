@@ -11,7 +11,7 @@
         select * from forum where movieId=#{movieId} limit #{pager.startRow},#{pager.pageRow}
     </select>
     <select id="count" parameterType="int" resultType="int">
-        select count(1) from forum where movieId=#{movieId}dddddd
+        select count(1) from forum where movieId=#{movieId}
     </select>
     <delete id="del" >
         delete from forum where forumId in
