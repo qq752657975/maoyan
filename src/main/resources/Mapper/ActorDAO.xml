@@ -4,13 +4,13 @@
 
 
     <select id="getById" parameterType="int" resultType="com.ygb.entity.ActorVo">
-        select * from actor WHERE  actorId=#{actorId}11
+        select * from actor WHERE  actorId=#{actorId}11111111111
     </select>
     <!--管理员列表-->
     <select id="list" resultType="com.ygb.entity.ActorVo">
         select * from actor order by actorId desc
         <if test="pager !=null">
-          limit #{pager.startRow},#{pager.pageRow}dddddd
+          limit #{pager.startRow},#{pager.pageRow}
         </if>
     </select>
     <select id="count" resultType="int">
